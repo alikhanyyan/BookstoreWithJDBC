@@ -2,13 +2,13 @@ CREATE DATABASE BookstoreDB;
 
 \c bookstoredb;
 
-CREATE TABLE IF NOT EXISTS Books (
-    BookID SERIAL PRIMARY KEY, 
-    Title VARCHAR(50) NOT NULL, 
-    Author VARCHAR(30), 
-    Genre VARCHAR(25), 
-    Price FLOAT(2) CHECK(Price >= 0), 
-    QuantityInStock INTEGER CHECK(QuantityInStock >= 0)
+CREATE TABLE Books(
+	BookID SERIAL PRIMARY KEY,
+	Title TEXT NOT NULL,
+	Author VARCHAR(40) NOT NULL,
+	Genre VARCHAR(30) NOT NULL,
+	Price REAL NOT NULL CHECK(Price > 0),
+	QuantityInStock INTEGER NOT NULL CHECK(QuantityInStock >= 0) 
 );
 
 INSERT INTO Books(Title, Author, Genre, Price, QuantityInStock)
@@ -23,11 +23,11 @@ INSERT INTO Books(Title, Author, Genre, Price, QuantityInStock)
            ('The Three Musketeers', 'Alexandre Dumas', 'Historical', 4.50, 17),
            ('Robinson Crusoe', 'Daniel Defoe', 'Action and Adventure', 2.90, 3);
 
-CREATE TABLE IF NOT EXISTS Customers (
-    CustomerID SERIAL PRIMARY KEY, 
-    Name VARCHAR(30) NOT NULL, 
-    Email VARCHAR(50) UNIQUE, 
-    Phone VARCHAR(15)
+CREATE TABLE Customers(
+	CustomerID SERIAL PRIMARY KEY,
+	Name VARCHAR(20) NOT NULL,
+	Email VARCHAR(60) UNIQUE,
+	Phone VARCHAR(20) NOT NULL 
 );
 
 INSERT INTO Customers(Name, Email, Phone)
@@ -37,18 +37,15 @@ INSERT INTO Customers(Name, Email, Phone)
            ('Nicola Simmons', 'nicolasimmons@gmail.com', '+3185236974512'),
            ('Mia Bailey', 'miabailey@gmail.com', '+34975066468');
 
-CREATE TABLE IF NOT EXISTS Sales (
-    SaleID SERIAL PRIMARY KEY, 
-    BookID INTEGER, 
-    CustomerID INTEGER, 
-    DateOfSale DATE, 
-    QuantitySold INTEGER CHECK(QuantitySold > 0), 
-    TotalPrice FLOAT(2) CHECK(TotalPrice >= 0),
-    
-    FOREIGN KEY (BookID) 
-    	REFERENCES Books(BookID) ON DELETE SET NULL,
-    FOREIGN KEY (CustomerID) 
-    	REFERENCES Customers(CustomerID) ON DELETE SET NULL
+CREATE TABLE Sales (
+	SaleID SERIAL PRIMARY KEY,
+	BookID INTEGER,
+	CustomerID INTEGER,
+	DateOfSale DATE,
+	QuantitySold INTEGER NOT NULL CHECK(QuantitySold >= 0),
+    TotalPrice REAL NOT NULL CHECK(TotalPrice >= 0),
+    CONSTRAINT fk_book FOREIGN KEY (BookID) REFERENCES Books(BookID) ON DELETE SET NULL,
+    CONSTRAINT fk_customer FOREIGN KEY (CustomerID) REFERENCES Customers(CustomerID) ON DELETE SET NULL
 );
 
 INSERT INTO Sales(BookID, CustomerID, DateOfSale, QuantitySold, TotalPrice)
@@ -84,4 +81,3 @@ CREATE TRIGGER update_quantity_trigger
 AFTER INSERT ON Sales
 FOR EACH ROW
 EXECUTE FUNCTION update_quantity_in_stock();
-
