@@ -276,53 +276,62 @@ public class Bookstore {
         Statement statement = connection.createStatement();
 
         statement.addBatch("""
-            IF NOT EXISTS (
-                SELECT 1
-                FROM information_schema.tables
-                WHERE table_name = 'Books'
-            ) THEN
-                CREATE TABLE Books(
-                    BookID SERIAL PRIMARY KEY,
-                    Title TEXT NOT NULL,
-                    Author VARCHAR(40) NOT NULL,
-                    Genre VARCHAR(30) NOT NULL,
-                    Price REAL NOT NULL CHECK(Price > 0),
-                    QuantityInStock INTEGER NOT NULL CHECK(QuantityInStock >= 0)
-                );
-            END IF;
-            """);
+                DO $$
+                BEGIN
+                    IF NOT EXISTS (
+                        SELECT 1
+                        FROM information_schema.tables
+                        WHERE table_name = 'Books'
+                    ) THEN
+                        CREATE TABLE Books(
+                            BookID SERIAL PRIMARY KEY,
+                            Title TEXT NOT NULL,
+                            Author VARCHAR(40) NOT NULL,
+                            Genre VARCHAR(30) NOT NULL,
+                            Price REAL NOT NULL CHECK(Price > 0),
+                            QuantityInStock INTEGER NOT NULL CHECK(QuantityInStock >= 0)
+                        );
+                    END IF;
+                END $$;             
+                """);
         statement.addBatch("""
-            IF EXISTS (
-                SELECT 1
-                FROM information_schema.tables
-                WHERE table_name = 'Customers'
-            ) THEN
-                CREATE TABLE Customers(
-                    CustomerID SERIAL PRIMARY KEY,
-                    Name VARCHAR(20) NOT NULL,
-                    Email VARCHAR(60) UNIQUE,
-                    Phone VARCHAR(20) NOT NULL
-                );
-            END IF;
-            """);
+                DO $$
+                BEGIN
+                    IF NOT EXISTS (
+                        SELECT 1
+                        FROM information_schema.tables
+                        WHERE table_name = 'Customers'
+                    ) THEN
+                        CREATE TABLE Customers(
+                            CustomerID SERIAL PRIMARY KEY,
+                            Name VARCHAR(20) NOT NULL,
+                            Email VARCHAR(60) UNIQUE,
+                            Phone VARCHAR(20) NOT NULL
+                        );
+                    END IF;
+                END $$;
+                """);
         statement.addBatch("""
-            IF EXISTS (
-                SELECT 1
-                FROM information_schema.tables
-                WHERE table_name = 'Sales'
-            ) THEN
-                CREATE TABLE Sales (
-                    SaleID SERIAL PRIMARY KEY,
-                    BookID INTEGER,
-                    CustomerID INTEGER,
-                    DateOfSale DATE,
-                    QuantitySold INTEGER NOT NULL CHECK(QuantitySold >= 0),
-                    TotalPrice REAL NOT NULL CHECK(TotalPrice >= 0),
-                    CONSTRAINT fk_book FOREIGN KEY (BookID) REFERENCES Books(BookID) ON DELETE SET NULL,
-                    CONSTRAINT fk_customer FOREIGN KEY (CustomerID) REFERENCES Customers(CustomerID) ON DELETE SET NULL
-                );
-            END IF;
-            """);
+                DO $$
+                BEGIN
+                    IF NOT EXISTS (
+                        SELECT 1
+                        FROM information_schema.tables
+                        WHERE table_name = 'Sales'
+                    ) THEN
+                        CREATE TABLE Sales (
+                            SaleID SERIAL PRIMARY KEY,
+                            BookID INTEGER,
+                            CustomerID INTEGER,
+                            DateOfSale DATE,
+                            QuantitySold INTEGER NOT NULL CHECK(QuantitySold >= 0),
+                            TotalPrice REAL NOT NULL CHECK(TotalPrice >= 0),
+                            CONSTRAINT fk_book FOREIGN KEY (BookID) REFERENCES Books(BookID) ON DELETE SET NULL,
+                            CONSTRAINT fk_customer FOREIGN KEY (CustomerID) REFERENCES Customers(CustomerID) ON DELETE SET NULL
+                        );
+                    END IF;
+                END $$;
+                """);
 
         statement.addBatch("""
             CREATE OR REPLACE FUNCTION update_books_quantity_in_stock()
