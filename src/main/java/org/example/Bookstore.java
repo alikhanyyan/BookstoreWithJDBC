@@ -4,6 +4,7 @@ import java.sql.*;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.Scanner;
+import static org.example.MenuCodes.*;
 
 public class Bookstore {
     private static final Scanner scanner = new Scanner(System.in);
@@ -15,56 +16,34 @@ public class Bookstore {
 
         try (Connection connection = DriverManager.getConnection(ADDRESS, USERNAME, PASSWORD))
         {
-            boolean exit = false;
-            while (!exit) {
-                System.out.println("Do you want to initialize database?");
-                System.out.println("1. Yes");
-                System.out.println("2. No");
-                System.out.println("0. Exit");
-
-                String choice = scanner.nextLine();
-
-                switch (choice) {
-                    case "1" -> initializeDatabase(connection);
-                    case "2" -> exit = true;
-
-                    case "0" -> {
-                        System.out.println("Exiting the application.");
-                        System.exit(0);
-                    }
-                    default -> System.out.println("Invalid choice. Please try again.");
-                }
-            }
-
-            exit = false;
-            while (!exit) {
+            while (true) {
                 System.out.println("Choose an option:");
-                System.out.println("1. Update Book Details");
-                System.out.println("2. List Books by Genre");
-                System.out.println("3. List Books by Author");
-                System.out.println("4. Update Customer Information");
-                System.out.println("5. View Customer's Purchase History");
-                System.out.println("6. Process New Sale");
-                System.out.println("7. Calculate Total Revenue by Genre");
-                System.out.println("8. Generate Sales Report");
-                System.out.println("9. Generate Revenue Report by Genre");
-                System.out.println("0. Exit");
+                System.out.println(MenuCodes.valueOf(String.valueOf(UPDATE_BOOK_DETAILS)) + ". Update Book Details");
+                System.out.println(MenuCodes.valueOf(String.valueOf(LIST_BOOKS_BY_GENRE)) + ". List Books by Genre");
+                System.out.println(MenuCodes.valueOf(String.valueOf(LIST_BOOKS_BY_AUTHOR)) + ". List Books by Author");
+                System.out.println(MenuCodes.valueOf(String.valueOf(UPDATE_CUSTOMER_INFORMATION)) + ". Update Customer Information");
+                System.out.println(MenuCodes.valueOf(String.valueOf(VIEW_CUSTOMER_PURCHASE_HISTORY)) + ". View Customer's Purchase History");
+                System.out.println(MenuCodes.valueOf(String.valueOf(PROCESS_NEW_SALE)) + ". Process New Sale");
+                System.out.println(MenuCodes.valueOf(String.valueOf(CALCULATE_TOTAL_REVENUE_BY_GENRE)) + ". Calculate Total Revenue by Genre");
+                System.out.println(MenuCodes.valueOf(String.valueOf(GENERATE_SALES_REPORT)) + ". Generate Sales Report");
+                System.out.println(MenuCodes.valueOf(String.valueOf(GENERATE_REVENUE_REPORT_BY_GENRE)) + ". Generate Revenue Report by Genre");
+                System.out.println(MenuCodes.valueOf(String.valueOf(EXIT)) + ". Exit");
 
                 String choice = scanner.nextLine();
 
-                switch (choice) {
-                    case "1" -> updateBookDetails(connection);
-                    case "2" -> listBooksByAuthor(connection);
-                    case "3" -> listBooksByGenre(connection);
-                    case "4" -> updateCustomerInformation(connection);
-                    case "5" -> viewCustomerPurchaseHistory(connection);
-                    case "6" -> handleNewSales(connection);
-                    case "7" -> calculateTotalRevenueByGenre(connection);
-                    case "8" -> reportOfAllSoldBooks(connection);
-                    case "9" -> reportOfTotalRevenueFromEachGenre(connection);
-                    case "0" -> {
+                switch (MenuCodes.valueOf(choice)) {
+                    case UPDATE_BOOK_DETAILS -> updateBookDetails(connection);
+                    case LIST_BOOKS_BY_GENRE -> listBooksByAuthor(connection);
+                    case LIST_BOOKS_BY_AUTHOR -> listBooksByGenre(connection);
+                    case UPDATE_CUSTOMER_INFORMATION -> updateCustomerInformation(connection);
+                    case VIEW_CUSTOMER_PURCHASE_HISTORY -> viewCustomerPurchaseHistory(connection);
+                    case PROCESS_NEW_SALE -> handleNewSales(connection);
+                    case CALCULATE_TOTAL_REVENUE_BY_GENRE -> calculateTotalRevenueByGenre(connection);
+                    case GENERATE_SALES_REPORT -> reportOfAllSoldBooks(connection);
+                    case GENERATE_REVENUE_REPORT_BY_GENRE -> reportOfTotalRevenueFromEachGenre(connection);
+                    case EXIT -> {
                         System.out.println("Exiting.");
-                        exit = true;
+                        return;
                     }
                     default -> System.out.println("Invalid choice. Please try again.");
                 }
@@ -144,7 +123,9 @@ public class Bookstore {
                 "SELECT Title, Author, Price, QuantityInStock FROM Books WHERE Genre = ?;");
         statement.setString(1, genre);
         System.out.println("Genre: " + genre);
-        System.out.println(statement.executeQuery());
+        ResultSet resultSet = statement.executeQuery();
+
+        printResultSet(resultSet);
     }
 
     private static void listBooksByAuthor(Connection connection) throws SQLException {
@@ -155,7 +136,9 @@ public class Bookstore {
                 "SELECT Title, Genre, Price, QuantityInStock FROM Books WHERE Author = ?;");
         System.out.println("Author: " + author);
         statement.setString(1, author);
-        System.out.println(statement.executeQuery());
+        ResultSet resultSet = statement.executeQuery();
+
+        printResultSet(resultSet);
     }
 
     private static void updateCustomerInformation(Connection connection) throws SQLException, NumberFormatException {
@@ -209,7 +192,9 @@ public class Bookstore {
                 "FROM Customers C JOIN Sales S ON C.CustomerID = S.CustomerID JOIN Books B on B.BookID = S.BookID" +
                 "WHERE C.CustomerID = ?;");
         statement.setInt(1, customerID);
-        System.out.println(statement.executeQuery());
+        ResultSet resultSet = statement.executeQuery();
+
+        printResultSet(resultSet);
     }
 
     private static void  handleNewSales(Connection connection) throws SQLException, NumberFormatException {
@@ -253,14 +238,18 @@ public class Bookstore {
                         "GROUP BY B.Genre" +
                         "WHERE B.Genre = ?;");
         statement.setString(1, genre);
-        System.out.println(statement.executeQuery());
+        ResultSet resultSet = statement.executeQuery();
+
+        printResultSet(resultSet);
     }
 
     private static void reportOfAllSoldBooks(Connection connection) throws SQLException {
         PreparedStatement statement = connection.prepareStatement(
                 "SELECT C.Name AS CustomerName, B.Title, S.DateOfSale" +
                         "FROM Customers C JOIN Sales S ON C.CustomerID = S.CustomerID JOIN Books B on B.BookID = S.BookID;");
-        System.out.println(statement.executeQuery());
+        ResultSet resultSet = statement.executeQuery();
+
+        printResultSet(resultSet);
     }
 
     private static void reportOfTotalRevenueFromEachGenre(Connection connection) throws SQLException {
@@ -268,90 +257,24 @@ public class Bookstore {
                 "SELECT B.Genre, SUM(S.Price) TotalRevenue" +
                         "FROM SALES S JOIN Books B ON S.BookID = B.BookID" +
                         "GROUP BY B.Genre;");
-        System.out.println(statement.executeQuery());
+        ResultSet resultSet = statement.executeQuery();
+
+        printResultSet(resultSet);
+    }
+
+    private static void printResultSet(ResultSet resultSet) throws SQLException {
+        for (int i = 1; i <= resultSet.getMetaData().getColumnCount(); i++) {
+            System.out.print(resultSet.getMetaData().getColumnName(i) + "\t");
+        }
+        System.out.println();
+
+        while (resultSet.next()) {
+            for (int i = 1; i <= resultSet.getMetaData().getColumnCount(); i++) {
+                System.out.print(resultSet.getString(i) + "\t");
+            }
+            System.out.println();
+        }
     }
 
 
-    private static void initializeDatabase(Connection connection) throws SQLException {
-        Statement statement = connection.createStatement();
-
-        statement.addBatch("""
-                DO $$
-                BEGIN
-                    IF NOT EXISTS (
-                        SELECT 1
-                        FROM information_schema.tables
-                        WHERE table_name = 'Books'
-                    ) THEN
-                        CREATE TABLE Books(
-                            BookID SERIAL PRIMARY KEY,
-                            Title TEXT NOT NULL,
-                            Author VARCHAR(40) NOT NULL,
-                            Genre VARCHAR(30) NOT NULL,
-                            Price REAL NOT NULL CHECK(Price > 0),
-                            QuantityInStock INTEGER NOT NULL CHECK(QuantityInStock >= 0)
-                        );
-                    END IF;
-                END $$;             
-                """);
-        statement.addBatch("""
-                DO $$
-                BEGIN
-                    IF NOT EXISTS (
-                        SELECT 1
-                        FROM information_schema.tables
-                        WHERE table_name = 'Customers'
-                    ) THEN
-                        CREATE TABLE Customers(
-                            CustomerID SERIAL PRIMARY KEY,
-                            Name VARCHAR(20) NOT NULL,
-                            Email VARCHAR(60) UNIQUE,
-                            Phone VARCHAR(20) NOT NULL
-                        );
-                    END IF;
-                END $$;
-                """);
-        statement.addBatch("""
-                DO $$
-                BEGIN
-                    IF NOT EXISTS (
-                        SELECT 1
-                        FROM information_schema.tables
-                        WHERE table_name = 'Sales'
-                    ) THEN
-                        CREATE TABLE Sales (
-                            SaleID SERIAL PRIMARY KEY,
-                            BookID INTEGER,
-                            CustomerID INTEGER,
-                            DateOfSale DATE,
-                            QuantitySold INTEGER NOT NULL CHECK(QuantitySold >= 0),
-                            TotalPrice REAL NOT NULL CHECK(TotalPrice >= 0),
-                            CONSTRAINT fk_book FOREIGN KEY (BookID) REFERENCES Books(BookID) ON DELETE SET NULL,
-                            CONSTRAINT fk_customer FOREIGN KEY (CustomerID) REFERENCES Customers(CustomerID) ON DELETE SET NULL
-                        );
-                    END IF;
-                END $$;
-                """);
-
-        statement.addBatch("""
-            CREATE OR REPLACE FUNCTION update_books_quantity_in_stock()
-            RETURNS TRIGGER AS $$
-            BEGIN
-                UPDATE Books
-                SET QuantityInStock = QuantityInStock - NEW.QuantitySold
-                WHERE BookID = NEW.BookID;
-                RETURN NEW;
-            END;
-            $$ LANGUAGE plpgsql;
-            """);
-        statement.addBatch("""
-            CREATE TRIGGER update_books_quantity
-            AFTER INSERT ON Sales
-            FOR EACH ROW
-            EXECUTE FUNCTION update_books_quantity_in_stock();
-            """);
-
-        statement.executeBatch();
-        statement.clearBatch();
-    }
 }
