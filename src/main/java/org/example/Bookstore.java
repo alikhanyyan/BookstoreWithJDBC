@@ -18,20 +18,21 @@ public class Bookstore {
         {
             while (true) {
                 System.out.println("Choose an option:");
-                System.out.println(MenuCodes.valueOf(String.valueOf(UPDATE_BOOK_DETAILS)) + ". Update Book Details");
-                System.out.println(MenuCodes.valueOf(String.valueOf(LIST_BOOKS_BY_GENRE)) + ". List Books by Genre");
-                System.out.println(MenuCodes.valueOf(String.valueOf(LIST_BOOKS_BY_AUTHOR)) + ". List Books by Author");
-                System.out.println(MenuCodes.valueOf(String.valueOf(UPDATE_CUSTOMER_INFORMATION)) + ". Update Customer Information");
-                System.out.println(MenuCodes.valueOf(String.valueOf(VIEW_CUSTOMER_PURCHASE_HISTORY)) + ". View Customer's Purchase History");
-                System.out.println(MenuCodes.valueOf(String.valueOf(PROCESS_NEW_SALE)) + ". Process New Sale");
-                System.out.println(MenuCodes.valueOf(String.valueOf(CALCULATE_TOTAL_REVENUE_BY_GENRE)) + ". Calculate Total Revenue by Genre");
-                System.out.println(MenuCodes.valueOf(String.valueOf(GENERATE_SALES_REPORT)) + ". Generate Sales Report");
-                System.out.println(MenuCodes.valueOf(String.valueOf(GENERATE_REVENUE_REPORT_BY_GENRE)) + ". Generate Revenue Report by Genre");
-                System.out.println(MenuCodes.valueOf(String.valueOf(EXIT)) + ". Exit");
+                System.out.println(UPDATE_BOOK_DETAILS + ". Update Book Details");
+                System.out.println(LIST_BOOKS_BY_GENRE + ". List Books by Genre");
+                System.out.println(LIST_BOOKS_BY_AUTHOR + ". List Books by Author");
+                System.out.println(UPDATE_CUSTOMER_INFORMATION + ". Update Customer Information");
+                System.out.println(VIEW_CUSTOMER_PURCHASE_HISTORY + ". View Customer's Purchase History");
+                System.out.println(PROCESS_NEW_SALE + ". Process New Sale");
+                System.out.println(CALCULATE_TOTAL_REVENUE_BY_GENRE + ". Calculate Total Revenue by Genre");
+                System.out.println(GENERATE_SALES_REPORT + ". Generate Sales Report");
+                System.out.println(GENERATE_REVENUE_REPORT_BY_GENRE + ". Generate Revenue Report by Genre");
+                System.out.println(EXIT + ". Exit");
+                System.out.println();
 
                 String choice = scanner.nextLine();
 
-                switch (MenuCodes.valueOf(choice)) {
+                switch (getMenuCodeFromValue(choice)) {
                     case UPDATE_BOOK_DETAILS -> updateBookDetails(connection);
                     case LIST_BOOKS_BY_GENRE -> listBooksByAuthor(connection);
                     case LIST_BOOKS_BY_AUTHOR -> listBooksByGenre(connection);
@@ -45,13 +46,24 @@ public class Bookstore {
                         System.out.println("Exiting.");
                         return;
                     }
-                    default -> System.out.println("Invalid choice. Please try again.");
+                    case null, default -> System.out.println("Invalid choice. Please try again.");
                 }
+                System.out.println();
             }
         } catch (SQLException | NumberFormatException e) {
             System.out.println(e.getMessage());
         }
     }
+    private static MenuCodes getMenuCodeFromValue(String value) {
+        value = value.trim();
+        for (MenuCodes menuCode : MenuCodes.values()) {
+            if (menuCode.toString().equals(value)) {
+                return menuCode;
+            }
+        }
+        return null;
+    }
+
 
     private static void updateBookDetails(Connection connection) throws SQLException, NumberFormatException {
         System.out.println("Enter book ID:");
@@ -189,8 +201,8 @@ public class Bookstore {
 
         PreparedStatement statement = connection.prepareStatement(
                 "SELECT C.Name AS CustomerName, B.Title, B.Author, B.Genre, S.DateOfSale " +
-                "FROM Customers C JOIN Sales S ON C.CustomerID = S.CustomerID JOIN Books B on B.BookID = S.BookID" +
-                "WHERE C.CustomerID = ?;");
+                        "FROM Customers C INNER JOIN Sales S ON C.CustomerID = S.CustomerID INNER JOIN Books B on B.BookID = S.BookID " +
+                        "WHERE C.CustomerID = ?;");
         statement.setInt(1, customerID);
         ResultSet resultSet = statement.executeQuery();
 
@@ -216,7 +228,7 @@ public class Bookstore {
         String date = LocalDate.now().format(formatters);
 
         statement = connection.prepareStatement(
-                " INSERT INTO Sales (BookID, CustomerID, DateOfSale, QuantitySold, TotalPrice)" +
+                " INSERT INTO Sales (BookID, CustomerID, DateOfSale, QuantitySold, TotalPrice) " +
                         "VALUES(?, ?, ?, ?, ?);");
         statement.setInt(1, bookID);
         statement.setInt(2, customerID);
@@ -233,9 +245,9 @@ public class Bookstore {
         String genre = scanner.next();
 
         PreparedStatement statement = connection.prepareStatement(
-                "SELECT B.Genre, SUM(S.Price) TotalRevenue" +
-                        "FROM SALES S JOIN Books B ON S.BookID = B.BookID" +
-                        "GROUP BY B.Genre" +
+                "SELECT B.Genre, SUM(S.Price) TotalRevenue " +
+                        "FROM SALES S INNER JOIN Books B ON S.BookID = B.BookID " +
+                        "GROUP BY B.Genre " +
                         "WHERE B.Genre = ?;");
         statement.setString(1, genre);
         ResultSet resultSet = statement.executeQuery();
@@ -245,8 +257,8 @@ public class Bookstore {
 
     private static void reportOfAllSoldBooks(Connection connection) throws SQLException {
         PreparedStatement statement = connection.prepareStatement(
-                "SELECT C.Name AS CustomerName, B.Title, S.DateOfSale" +
-                        "FROM Customers C JOIN Sales S ON C.CustomerID = S.CustomerID JOIN Books B on B.BookID = S.BookID;");
+                "SELECT C.Name AS CustomerName, B.Title, S.DateOfSale " +
+                        "FROM Customers C INNER JOIN Sales S ON C.CustomerID = S.CustomerID INNER JOIN Books B on B.BookID = S.BookID;");
         ResultSet resultSet = statement.executeQuery();
 
         printResultSet(resultSet);
@@ -254,8 +266,8 @@ public class Bookstore {
 
     private static void reportOfTotalRevenueFromEachGenre(Connection connection) throws SQLException {
         PreparedStatement statement = connection.prepareStatement(
-                "SELECT B.Genre, SUM(S.Price) TotalRevenue" +
-                        "FROM SALES S JOIN Books B ON S.BookID = B.BookID" +
+                "SELECT B.Genre, SUM(S.Price) TotalRevenue " +
+                        "FROM SALES S INNER JOIN Books B ON S.BookID = B.BookID " +
                         "GROUP BY B.Genre;");
         ResultSet resultSet = statement.executeQuery();
 
