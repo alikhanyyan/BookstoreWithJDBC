@@ -12,7 +12,14 @@ public enum MenuCodes {
     GENERATE_SALES_REPORT("8"),
     GENERATE_REVENUE_REPORT_BY_GENRE("9");
 
-    MenuCodes(String strCode) {
+    private final String value;
+
+    MenuCodes(String value){
+        this.value = value;
+    }
+
+    @Override
+    public String toString() {
+        return value;
     }
 }
-
