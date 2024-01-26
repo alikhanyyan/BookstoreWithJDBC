@@ -201,8 +201,8 @@ public class Bookstore {
 
         PreparedStatement statement = connection.prepareStatement(
                 "SELECT C.Name AS CustomerName, B.Title, B.Author, B.Genre, S.DateOfSale " +
-                        "FROM Customers C INNER JOIN Sales S ON C.CustomerID = S.CustomerID INNER JOIN Books B on B.BookID = S.BookID " +
-                        "WHERE C.CustomerID = ?;");
+                "FROM Customers C INNER JOIN Sales S ON C.CustomerID = S.CustomerID INNER JOIN Books B on B.BookID = S.BookID " +
+                "WHERE C.CustomerID = ?;");
         statement.setInt(1, customerID);
         ResultSet resultSet = statement.executeQuery();
 
@@ -287,6 +287,4 @@ public class Bookstore {
             System.out.println();
         }
     }
-
-
 }
